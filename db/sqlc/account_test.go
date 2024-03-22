@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bajra-manandhar17/go-simple_bank/util"
 	"github.com/stretchr/testify/require"
-	"github.com/techschool/simplebank/util"
 )
 
 func createRandomAccount(t *testing.T) Account {
