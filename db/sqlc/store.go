@@ -4,29 +4,28 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 )
 
-type Store struct {
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+}
+
+type SQLStore struct {
 	*Queries         // Embed all the queries in the store. Called "Composition" in Go. Prefer this over inheritance.
 	db       *sql.DB // Requried to create DB transactions.
 }
 
 // NewStore creates a new Store.
-func NewStore(db *sql.DB) *Store {
-
-	if db == nil {
-		log.Fatal("db should not be nil")
-	}
-
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,      // Store the db connection.
 		Queries: New(db), // Create new queries and returns objects.
 	}
 }
 
 // execTx executes a function within a database transaction. If the function returns an error, the transaction is rolled back. If the function returns nil, the transaction is committed.
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil) // Begin a new transaction.
 
 	if err != nil {
@@ -67,7 +66,7 @@ var txKey = struct{}{}
 
 // TransferTx performs a money transfer from one account to the other.
 // It creates a transfer record, add account entries and update account's balence within a single database transaction
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
