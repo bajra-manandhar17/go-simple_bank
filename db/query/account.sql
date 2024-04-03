@@ -2,13 +2,10 @@
 INSERT INTO accounts (
   owner,
   balance,
-   currency
+  currency
 ) VALUES (
-    $1,
-    $2,
-    $3
-)
-RETURNING *;
+  $1, $2, $3
+) RETURNING *;
 
 -- name: GetAccount :one
 SELECT * FROM accounts
@@ -21,19 +18,20 @@ FOR NO KEY UPDATE;
 
 -- name: ListAccounts :many
 SELECT * FROM accounts
+WHERE owner = $1
 ORDER BY id
-LIMIT $1
-OFFSET $2;
+LIMIT $2
+OFFSET $3;
 
 -- name: UpdateAccount :one
 UPDATE accounts
-  SET balance = $2
+SET balance = $2
 WHERE id = $1
 RETURNING *;
 
 -- name: AddAccountBalance :one
 UPDATE accounts
-  SET balance = balance + sqlc.arg(amount)
+SET balance = balance + sqlc.arg(amount)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
